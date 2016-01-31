@@ -36,30 +36,35 @@ Z2=U2*Y;
 
 }
 }
-std::cout <<"Z1="<<Z1<< std::endl;
+//std::cout <<"Z1="<<Z1<< std::endl;
 return Z1;
 
 }
 
 
-double density(double Xold, double  Xnew, double sigma, double r, double delta){
+double density(double Xold, double  Xnew, double sigma, double r, double delta, double delta_t){
 
 double f, x;
 
-x=(1/sigma)*(log(Xnew)-log(Xold)-(r-delta-0.5*sigma*sigma));
+x=(1/(sigma*sqrt(delta_t)))*(log(Xnew)-log(Xold)-(r-delta-0.5*sigma*sigma)*delta_t);
 
-f= (1/(sigma*Xnew))*(1/(2*PI))*exp(-0.5*x*x);
+f= (1/(sigma*sqrt(delta_t)*Xnew))*(1/(2*PI))*exp(-0.5*x*x);
 
 return f;
 }
 
 int main(){
 //1 year in 0.1 increments starting at 0 and ending at 1
+/*
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!NOTE: may need to include delta t's in calculation of the mesh since delta t is 0.1 and not 1.!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*/
 srand((unsigned)time(NULL));
 double X0=100;
 double T = 1;
 double m =10;
-double t=T/m;
+double delta_t=T/m;
 int b=3;
 double Z, r=0.03, delta=0.05, sigma=0.4, Xi, Xj, w, wdenominator;
 
@@ -67,11 +72,18 @@ double Z, r=0.03, delta=0.05, sigma=0.4, Xi, Xj, w, wdenominator;
 std::vector< std::vector<double> > X;
 //WEIGHTS for step 1 and beyond
 std::vector< std::vector< std::vector<double> > > W;
+//temp vector in MeshGen for loop
+std::vector< double > myvector;
+//2 d temp vector in WeightsGen for loop
+std::vector< std::vector<double> > dim2temp;
+//1 d vector in Weightsgen for loop
+std:: vector<double> dim1temp;
 
+//MeshGen for lop
 for(int i=0; i<m; i++){
 
 
-	std::vector< double > myvector;
+	myvector.clear();
 
 
 	if(i==0){
@@ -79,7 +91,7 @@ for(int i=0; i<m; i++){
 	for(int l=0; l<b; l++){
 		Z=boxmuller();
 		//std::cout<<"Z="<<Z<< std::endl;
-		Xi=X0 * (exp (r-delta-0.5*sigma*sigma + sigma*Z));
+		Xi=X0 * (exp ((r-delta-0.5*sigma*sigma)*delta_t + sigma*sqrt(delta_t)*Z));
 		myvector.push_back(Xi);	
 	}
 	}
@@ -89,7 +101,7 @@ for(int i=0; i<m; i++){
 	for(int j=0; j<b; j++){
 		Z=boxmuller();
 		Xi=X[i-1][j];
-		Xj=Xi * (exp (r-delta-0.5*sigma*sigma + sigma*Z));
+		Xj=Xi * (exp ((r-delta-0.5*sigma*sigma)*delta_t + sigma*sqrt(delta_t)*Z));
 		myvector.push_back(Xj);
 	}
 	}
@@ -99,14 +111,15 @@ X.push_back(myvector);
 }
 
 
-
+//WeightsGen for loop 
+//NOTE: W^i_(j,k) IS REPRESENTED AT W[i][k][j] where k is at step i+1 and j is at step i.
 for(int i=0; i<m; i++){
 
-std::vector< std::vector<double> > dim2temp;
+dim2temp.clear();
 	
 	if(i==0){
 		for(int k=0; k<b; k++){
-        	std:: vector<double> dim1temp;
+        	dim1temp.clear();
                         //W[i][0][k]=w;
 			//w=density(X0, X[i][k], sigma, r, delta);
 			w=1;
@@ -119,11 +132,11 @@ std::vector< std::vector<double> > dim2temp;
 	if(i>0){
 	
 		for(int k=0; k<b; k++){	
-		std:: vector<double> dim1temp;
+		dim1temp.clear();
 		wdenominator=0;
 	
 			for(int j=0; j<b; j++){
-			w=density(X[i-1][j], X[i][k], sigma, r, delta);	
+			w=density(X[i-1][j], X[i][k], sigma, r, delta, delta_t);//step 1 in X is X[0] step 1 in W is W[1]	
 			dim1temp.push_back(w);
 			}
 			
@@ -157,6 +170,24 @@ for ( std::vector<std::vector<double> >::size_type l = 0; l < X.size(); l++ )
    std::cout << std::endl;
 }
 
+int i, j, k;
+
+std::cout<< "type in i, k and j"<<std::endl;
+
+std::cin>> i;
+
+std::cin>> k ;
+
+//std::cin>> j;
+double sum=0;
+for(int d=0; d<b; d++ ){
+std::cout<< W[i][k][d]<<std::endl;
+sum+=d;
+}
+
+std::cout<<"sum="<<sum<<std::endl;
+
+return 0;
 
 
 }
