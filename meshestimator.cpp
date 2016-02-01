@@ -18,16 +18,11 @@ h=k-x;
 return h;
 }
 
-double contin_val(){
-
-}
-
-int main(){
-
+double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W ){
 
 double H; //payoff function
 double C; //continuation value
-double strike=100;
+double sum, V_0;
 
 //mesh estimator(high bias)
 std::vector< std::vector<double> > V;
@@ -36,39 +31,64 @@ std::vector< double > tempvec;
 
 
 //Estimator loop
-for(int i=m; i=0; i--){
+for(int i=0; i<m; i++){
 tempvec.clear();
+
 	for(int j=0; j<b; j++){
-		if(i==m){
-		H=payoff(X[i][j], stirke);
+		if(i==0){
+		H=payoff(X[(m-1)-i][j], strike);
 		tempvec.push_back(H);
 		}
-
+	
 		else{
-		
-//continue to develope continuation vale
-			for(int l; l<b; l++){
-			
-
+//continue to develope continuation vale			
+			sum=0;
+			for(int k=0; k<b; k++){
+			sum+=W[(m-i)][k][j]*V[i-1][k]; //m-i when i=1 is 10-1=9.when i=9 m-i=1. we get V_0 separately by using W[0][k][j]	
 			}
 
-		H=payoff(X[i][j], strike);
+			C=(1/(double)b)*sum*exp(-r*delta_t);
+			H=payoff(X[(m-1)-i][j], strike);
 		
-
 			if(H>C){
-
+			tempvec.push_back(H);
 			}
 
 			else{
-		
-			}
-
-
+			tempvec.push_back(C);
+			}	
 		}
 	}
-
 V.push_back(tempvec);
 }
 
-return 0;
+sum=0;
+for(int k=0; k<b; k++){
+sum+=V[m-1][k];        
+}
+
+for ( std::vector<std::vector<double> >::size_type l = 0; l < V.size(); l++ )
+{
+   for ( std::vector<double>::size_type k = 0; k < V[l].size(); k++ )
+   {
+      std::cout << V[l][k] << ' ';
+   }
+   std::cout << std::endl;
+}
+
+std::cout<<"sum="<<sum<<std::endl;
+
+std::cout<<"exp="<<exp(-r*delta_t)<<std::endl;
+std::cout<<"r="<<r<<std::endl;
+std::cout<<"delta_t="<<delta_t<<std::endl;
+std::cout<<"1/b="<<1/b<<std::endl;
+
+V_0=(1/(double)b)*sum*exp(-r*delta_t);
+
+std::cout<<"V[9][0]="<<V[9][0]<<std::endl;
+std::cout<<"V[9][1]="<<V[9][1]<<std::endl;
+std::cout<<"V[9][2]="<<V[9][2]<<std::endl;
+std::cout<<"V__0="<<V_0<<std::endl;
+
+return V_0;
 }

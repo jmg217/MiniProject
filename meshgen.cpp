@@ -8,6 +8,8 @@
 
 #define PI 3.14159265358979323846
 
+double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W );
+
 double round( double value )
   {
   return floor( value + 0.5 );
@@ -66,7 +68,8 @@ double T = 1;
 double m =10;
 double delta_t=T/m;
 int b=3;
-double Z, r=0.03, delta=0.05, sigma=0.4, Xi, Xj, w, wdenominator;
+double V_0, Z, r=0.03, delta=0.05, sigma=0.4, Xi, Xj, w, wdenominator;
+double strike=100;
 
 //MESH
 std::vector< std::vector<double> > X;
@@ -157,6 +160,11 @@ dim2temp.clear();
 W.push_back(dim2temp);
 }
 
+V_0=MeshEstimator(strike, r, delta_t, b, m, X, W);
+
+std::cout<<"V_0="<<V_0<<std::endl;
+
+
 //std::cout<< X.size() <<"\t"<< X[1].size() << std::endl;
 
 //make this a head file for printing matrices
@@ -169,7 +177,7 @@ for ( std::vector<std::vector<double> >::size_type l = 0; l < X.size(); l++ )
    }
    std::cout << std::endl;
 }
-
+/*
 int i, j, k;
 
 std::cout<< "type in i, k and j"<<std::endl;
@@ -186,6 +194,7 @@ sum+=d;
 }
 
 std::cout<<"sum="<<sum<<std::endl;
+*/
 
 return 0;
 
