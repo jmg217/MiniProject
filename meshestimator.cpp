@@ -18,14 +18,13 @@ h=k-x;
 return h;
 }
 
-double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W ){
+
+double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V){
 
 double H; //payoff function
 double C; //continuation value
 double sum, V_0;
 
-//mesh estimator(high bias)
-std::vector< std::vector<double> > V;
 // temp vector in Estimator loop
 std::vector< double > tempvec;
 
@@ -76,19 +75,23 @@ for ( std::vector<std::vector<double> >::size_type l = 0; l < V.size(); l++ )
    std::cout << std::endl;
 }
 
+V_0=(1/(double)b)*sum*exp(-r*delta_t);
+
+/*
 std::cout<<"sum="<<sum<<std::endl;
 
 std::cout<<"exp="<<exp(-r*delta_t)<<std::endl;
 std::cout<<"r="<<r<<std::endl;
 std::cout<<"delta_t="<<delta_t<<std::endl;
 std::cout<<"1/b="<<1/b<<std::endl;
+*/
 
-V_0=(1/(double)b)*sum*exp(-r*delta_t);
 
+/*
 std::cout<<"V[9][0]="<<V[9][0]<<std::endl;
 std::cout<<"V[9][1]="<<V[9][1]<<std::endl;
 std::cout<<"V[9][2]="<<V[9][2]<<std::endl;
 std::cout<<"V__0="<<V_0<<std::endl;
-
+*/
 return V_0;
 }

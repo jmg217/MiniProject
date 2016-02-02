@@ -8,7 +8,9 @@
 
 #define PI 3.14159265358979323846
 
-double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W );
+double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V );
+
+double PathEstimator(double strike, double r, double delta_t, int b, double m, double sigma, double delta, double X0, std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W);
 
 double round( double value )
   {
@@ -55,6 +57,7 @@ f= (1/(sigma*sqrt(delta_t)*Xnew))*(1/(2*PI))*exp(-0.5*x*x);
 return f;
 }
 
+
 int main(){
 //1 year in 0.1 increments starting at 0 and ending at 1
 /*
@@ -81,6 +84,8 @@ std::vector< double > myvector;
 std::vector< std::vector<double> > dim2temp;
 //1 d vector in Weightsgen for loop
 std:: vector<double> dim1temp;
+//mesh estimator high bias 2-d matrix
+std::vector< std::vector<double> > V;
 
 //MeshGen for lop
 for(int i=0; i<m; i++){
@@ -160,10 +165,17 @@ dim2temp.clear();
 W.push_back(dim2temp);
 }
 
-V_0=MeshEstimator(strike, r, delta_t, b, m, X, W);
+V_0=MeshEstimator(strike, r, delta_t, b, m, X, W, V);
+
 
 std::cout<<"V_0="<<V_0<<std::endl;
+/*
+v_0=PathEstimator(strike, r, delta_t, b,  m, sigma, delta, X0, X, W);
+*/
 
+
+//I used the following to check if the pathestimator code was producing random stock prices. I did this by printing out all the values from the pathestimator code.
+//PathEstimator( strike, r, delta_t, b, m, sigma, delta, X0);
 
 //std::cout<< X.size() <<"\t"<< X[1].size() << std::endl;
 
