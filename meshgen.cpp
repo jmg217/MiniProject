@@ -10,18 +10,19 @@
 
 double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V );
 
-double PathEstimator(double strike, double r, double delta_t, int b, double m, double sigma, double delta, double X0, std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W);
+double PathEstimator(double strike, double r, double delta_t, int b, double m, double sigma, double delta, double X0, std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V);
+
 
 double round( double value )
-  {
+{
   return floor( value + 0.5 );
-  }
-
-double boxmuller(){
+}
 
 
+
+double boxmuller()
+{
 double U1, U2, R, Y, Z1, Z2;
-
 
 for(int i=0; i<100000; i++){
 
@@ -42,9 +43,16 @@ Z2=U2*Y;
 }
 //std::cout <<"Z1="<<Z1<< std::endl;
 return Z1;
-
 }
 
+int UniRandom(int b){
+double rn;
+rn=((double)rand()/(double)RAND_MAX)*((double)(b-1));
+
+rn=round(rn);
+
+return rn;
+}
 
 double density(double Xold, double  Xnew, double sigma, double r, double delta, double delta_t){
 
@@ -70,9 +78,9 @@ double X0=100;
 double T = 1;
 double m =10;
 double delta_t=T/m;
-int b=3;
-double V_0, Z, r=0.03, delta=0.05, sigma=0.4, Xi, Xj, w, wdenominator;
-double strike=100;
+int b=50, Rn;
+double v_0, V_0, Z, r=0.03, delta=0.05, sigma=0.4, Xi, Xj, w, wdenominator, v_sum, Path_estimator_iterations=100;
+double strike=100, sum_Z=0;
 
 //MESH
 std::vector< std::vector<double> > X;
@@ -87,18 +95,22 @@ std:: vector<double> dim1temp;
 //mesh estimator high bias 2-d matrix
 std::vector< std::vector<double> > V;
 
-//MeshGen for lop
+//MeshGen for loop
 for(int i=0; i<m; i++){
 
 
 	myvector.clear();
 
-
 	if(i==0){
 
 	for(int l=0; l<b; l++){
+		sum_Z=0;
+		for(int z=0; z<7; z++){
 		Z=boxmuller();
-		//std::cout<<"Z="<<Z<< std::endl;
+		sum_Z+=Z;
+		}
+		Z=(sum_Z)/7;
+	//	std::cout<<Z<< std::endl;
 		Xi=X0 * (exp ((r-delta-0.5*sigma*sigma)*delta_t + sigma*sqrt(delta_t)*Z));
 		myvector.push_back(Xi);	
 	}
@@ -107,9 +119,19 @@ for(int i=0; i<m; i++){
 	if(i>0){
 	
 	for(int j=0; j<b; j++){
-		Z=boxmuller();
-		Xi=X[i-1][j];
+		sum_Z=0;
+		for(int u=0; u<7; u++){
+                Z=boxmuller();
+                sum_Z+=Z;
+                }
+                Z=(sum_Z)/7;
+	//	std::cout<<Z<< std::endl;
+		Rn=UniRandom(b);
+	//	std::cout<<"Rn="<<Rn<<std::endl;
+		Xi=X[i-1][Rn];
+	//	std::cout<<"Xi="<<Xi<<"at t="<<i-1<<  <<std::endl;
 		Xj=Xi * (exp ((r-delta-0.5*sigma*sigma)*delta_t + sigma*sqrt(delta_t)*Z));
+	//	std::cout<<"Xi="<<Xi<<"at t="<<i-1<<"X(i+1)="<<Xj <<std::endl;
 		myvector.push_back(Xj);
 	}
 	}
@@ -153,6 +175,8 @@ dim2temp.clear();
 			wdenominator+=dim1temp[l];	
 			}
 			
+			wdenominator=(1/((double)b))*wdenominator;		
+	
 			//devide each element by the denominator
 			for(int t=0; t<b; t++){
 			dim1temp[t]=dim1temp[t]/wdenominator;
@@ -165,14 +189,35 @@ dim2temp.clear();
 W.push_back(dim2temp);
 }
 
+double check=0;
+//check all the weights from X0 are 1
+for(int e=0; e<b; e++){
+if(W[0][e][0]!=1){
+std::cout<<"there is an error with the weights. check that W[0][k][0]'s =1"<<std::endl;
+}
+}
+//check that the weights going into a node sum to 1
+for(int E=0; E<b; E++){
+check+=W[1][0][E];
+//std::cout<<W[1][0][E]<<std::endl;
+}
+if(check != b){
+std::cout<<"the sum of the weights does not add up. Ignore if check="<<check<<"=b="<<b<<std::endl;
+}
+
 V_0=MeshEstimator(strike, r, delta_t, b, m, X, W, V);
 
 
 std::cout<<"V_0="<<V_0<<std::endl;
-/*
-v_0=PathEstimator(strike, r, delta_t, b,  m, sigma, delta, X0, X, W);
-*/
 
+
+for(int f=0; f<Path_estimator_iterations; f++){
+v_sum+=PathEstimator(strike, r, delta_t, b,  m, sigma, delta, X0, X, W, V);
+}
+
+v_0=(1/double(Path_estimator_iterations))*v_sum;
+
+std::cout<<"v_0="<<v_0<<std::endl;
 
 //I used the following to check if the pathestimator code was producing random stock prices. I did this by printing out all the values from the pathestimator code.
 //PathEstimator( strike, r, delta_t, b, m, sigma, delta, X0);
@@ -181,6 +226,7 @@ v_0=PathEstimator(strike, r, delta_t, b,  m, sigma, delta, X0, X, W);
 
 //make this a head file for printing matrices
 
+/*
 for ( std::vector<std::vector<double> >::size_type l = 0; l < X.size(); l++ )
 {
    for ( std::vector<double>::size_type k = 0; k < X[l].size(); k++ )
@@ -189,6 +235,7 @@ for ( std::vector<std::vector<double> >::size_type l = 0; l < X.size(); l++ )
    }
    std::cout << std::endl;
 }
+*/
 /*
 int i, j, k;
 

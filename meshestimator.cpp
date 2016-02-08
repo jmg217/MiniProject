@@ -10,7 +10,7 @@
 double payoff(double x, double k){
 
 double h;
-h=k-x;
+h=x-k;
 	if(h<0){
 	h=0;
 	}
@@ -35,7 +35,7 @@ tempvec.clear();
 
 	for(int j=0; j<b; j++){
 		if(i==0){
-		H=payoff(X[(m-1)-i][j], strike);
+		H=payoff(X[(m-1)-i][j], strike)*exp(-r*delta_t*(m-i));
 		tempvec.push_back(H);
 		}
 	
@@ -46,10 +46,10 @@ tempvec.clear();
 			sum+=W[(m-i)][k][j]*V[i-1][k]; //m-i when i=1 is 10-1=9.when i=9 m-i=1. we get V_0 separately by using W[0][k][j]	
 			}
 
-			C=(1/(double)b)*sum*exp(-r*delta_t);
-			H=payoff(X[(m-1)-i][j], strike);
+			C=(1/((double)b))*sum;
+			H=payoff(X[(m-1)-i][j], strike)*exp(-r*delta_t*(m-i));
 		
-			if(H>C){
+			if(H>=C){
 			tempvec.push_back(H);
 			}
 
@@ -66,6 +66,9 @@ for(int k=0; k<b; k++){
 sum+=V[m-1][k];        
 }
 
+V_0=(1/((double)b))*sum;
+
+/*
 for ( std::vector<std::vector<double> >::size_type l = 0; l < V.size(); l++ )
 {
    for ( std::vector<double>::size_type k = 0; k < V[l].size(); k++ )
@@ -74,8 +77,7 @@ for ( std::vector<std::vector<double> >::size_type l = 0; l < V.size(); l++ )
    }
    std::cout << std::endl;
 }
-
-V_0=(1/(double)b)*sum*exp(-r*delta_t);
+*/
 
 /*
 std::cout<<"sum="<<sum<<std::endl;
@@ -91,7 +93,8 @@ std::cout<<"1/b="<<1/b<<std::endl;
 std::cout<<"V[9][0]="<<V[9][0]<<std::endl;
 std::cout<<"V[9][1]="<<V[9][1]<<std::endl;
 std::cout<<"V[9][2]="<<V[9][2]<<std::endl;
-std::cout<<"V__0="<<V_0<<std::endl;
 */
+//std::cout<<"V_0="<<V_0<<std::endl;
+
 return V_0;
 }
