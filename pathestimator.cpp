@@ -14,7 +14,7 @@ double boxmuller();
 
 double Payoff(double x, double k){
 double h;
-h=x-k;
+h=k-x;
         if(h<0){
         h=0;
         }
@@ -60,7 +60,7 @@ return w;
 }
 
 
-double PathEstimator(double strike, double r, double delta_t, int b, double m, double sigma, double delta, double X0, std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V){
+double PathEstimator(double strike, double r, double delta_t, int b, double m, double sigma, double delta, double X0, std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V, int num_assets){
 
 //srand((unsigned)time(NULL));
 double v_0, S_i, Z, C, H, sum, weight, w_s, sum_Z;
@@ -75,23 +75,23 @@ std::vector< std::vector<double> > S_Weights;
 for(int i=0; i<m; i++){
 	if(i==0){
 	sum_Z=0;
-	for(int z=0; z<7; z++){
+	for(int z=0; z<num_assets; z++){
                 Z=boxmuller();
 //		std::cout<<Z<<std::endl;
                 sum_Z+=Z;
         }
-        Z=(sum_Z)/7;
+        Z=(sum_Z)/((double)num_assets);
 	//Z=boxmuller();
 	S_i=X0 * (exp((r-delta-0.5*sigma*sigma)*delta_t + sigma*sqrt(delta_t)*Z));
 	}
 
 	else{
 	sum_Z=0;
-	for(int u=0; u<7; u++){
+	for(int u=0; u<num_assets; u++){
                 Z=boxmuller();
                 sum_Z+=Z;
         }
-                Z=(sum_Z)/7;
+                Z=(sum_Z)/((double)num_assets);
 	//Z=boxmuller();
 	S_i=S[i-1]*(exp((r-delta-0.5*sigma*sigma)*delta_t + sigma*sqrt(delta_t)*Z));
 	}
@@ -144,6 +144,7 @@ sum=0;
 	
 
 H=Payoff(S[i], strike)*exp(-r*delta_t*((i+1)));
+
 //std::cout<<i<<"\t"<<H<<"\t"<<C<<std::endl;
 //NOT SURE IF THIS IS > OR >=. CHECK THIS!
 	if(H>=C || i==m-1){
@@ -152,7 +153,6 @@ H=Payoff(S[i], strike)*exp(-r*delta_t*((i+1)));
 	}
 
 }
-
 
 /*
 for(int i=0; i<m+1; i++){

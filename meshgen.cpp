@@ -8,10 +8,11 @@
 
 #define PI 3.14159265358979323846
 
-double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V );
+double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V, int num_assets);
 
-double PathEstimator(double strike, double r, double delta_t, int b, double m, double sigma, double delta, double X0, std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V);
+double PathEstimator(double strike, double r, double delta_t, int b, double m, double sigma, double delta, double X0, std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V, int num_assets);
 
+void print_high_payoff(int b, double m, std::vector< std::vector<double> >& X, std::vector< std::vector<double> >& V);
 
 double round( double value )
 {
@@ -76,11 +77,12 @@ int main(){
 srand((unsigned)time(NULL));
 double X0=100;
 double T = 1;
-double m =10;
+double m = 10;
 double delta_t=T/m;
-int b=50, Rn;
-double v_0, V_0, Z, r=0.03, delta=0.05, sigma=0.4, Xi, Xj, w, wdenominator, v_sum, Path_estimator_iterations=100;
+int b=1000, Rn;
+double v_0, V_0, Z, r=0.03, delta=0, sigma=0.4, Xi, Xj, w, wdenominator, v_sum, Path_estimator_iterations=500;
 double strike=100, sum_Z=0;
+int num_assets=1;
 
 //MESH
 std::vector< std::vector<double> > X;
@@ -105,11 +107,11 @@ for(int i=0; i<m; i++){
 
 	for(int l=0; l<b; l++){
 		sum_Z=0;
-		for(int z=0; z<7; z++){
+		for(int z=0; z<num_assets; z++){
 		Z=boxmuller();
 		sum_Z+=Z;
 		}
-		Z=(sum_Z)/7;
+		Z=(sum_Z)/((double)num_assets);
 	//	std::cout<<Z<< std::endl;
 		Xi=X0 * (exp ((r-delta-0.5*sigma*sigma)*delta_t + sigma*sqrt(delta_t)*Z));
 		myvector.push_back(Xi);	
@@ -120,11 +122,11 @@ for(int i=0; i<m; i++){
 	
 	for(int j=0; j<b; j++){
 		sum_Z=0;
-		for(int u=0; u<7; u++){
+		for(int u=0; u<num_assets; u++){
                 Z=boxmuller();
                 sum_Z+=Z;
                 }
-                Z=(sum_Z)/7;
+                Z=(sum_Z)/((double)num_assets);
 	//	std::cout<<Z<< std::endl;
 		Rn=UniRandom(b);
 	//	std::cout<<"Rn="<<Rn<<std::endl;
@@ -168,18 +170,22 @@ dim2temp.clear();
 			for(int j=0; j<b; j++){
 			w=density(X[i-1][j], X[i][k], sigma, r, delta, delta_t);//step 1 in X is X[0] step 1 in W is W[1]	
 			dim1temp.push_back(w);
+			wdenominator+=w;
 			}
 			
 			//this loop is for getting the denominator
-			for(int l=0; l<b; l++){
+			/*for(int l=0; l<b; l++){
 			wdenominator+=dim1temp[l];	
+			//std::cout<<dim1temp[l]<<std::endl;
 			}
-			
-			wdenominator=(1/((double)b))*wdenominator;		
-	
+			*/
+
+			//wdenominator=(1/((double)b))*wdenominator;		
+			//std::cout<<wdenominator<<std::endl;
+
 			//devide each element by the denominator
 			for(int t=0; t<b; t++){
-			dim1temp[t]=dim1temp[t]/wdenominator;
+			dim1temp[t]=(((double)b)*dim1temp[t])/wdenominator;
 			}		
 		dim2temp.push_back(dim1temp); //dim1 is full therefore we add it onto dim2 vector
 		}	
@@ -197,27 +203,34 @@ std::cout<<"there is an error with the weights. check that W[0][k][0]'s =1"<<std
 }
 }
 //check that the weights going into a node sum to 1
+for(int q=1; q<m; q++){ 
+for(int a=0; a<b; a++){
+check=0;
 for(int E=0; E<b; E++){
-check+=W[1][0][E];
+check+=W[q][a][E];
 //std::cout<<W[1][0][E]<<std::endl;
 }
 if(check != b){
 std::cout<<"the sum of the weights does not add up. Ignore if check="<<check<<"=b="<<b<<std::endl;
 }
-
-V_0=MeshEstimator(strike, r, delta_t, b, m, X, W, V);
+}
+}
+V_0=MeshEstimator(strike, r, delta_t, b, m, X, W, V, num_assets);
 
 
 std::cout<<"V_0="<<V_0<<std::endl;
 
-
+v_sum=0;
 for(int f=0; f<Path_estimator_iterations; f++){
-v_sum+=PathEstimator(strike, r, delta_t, b,  m, sigma, delta, X0, X, W, V);
+v_sum+=PathEstimator(strike, r, delta_t, b,  m, sigma, delta, X0, X, W, V, num_assets);
 }
 
 v_0=(1/double(Path_estimator_iterations))*v_sum;
 
 std::cout<<"v_0="<<v_0<<std::endl;
+
+
+print_high_payoff( b, m, X, V);
 
 //I used the following to check if the pathestimator code was producing random stock prices. I did this by printing out all the values from the pathestimator code.
 //PathEstimator( strike, r, delta_t, b, m, sigma, delta, X0);

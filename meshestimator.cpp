@@ -10,7 +10,7 @@
 double payoff(double x, double k){
 
 double h;
-h=x-k;
+h=k-x;
 	if(h<0){
 	h=0;
 	}
@@ -19,7 +19,7 @@ return h;
 }
 
 
-double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V){
+double MeshEstimator(double strike, double r, double delta_t, int b, double m,  std::vector< std::vector<double> >& X, std::vector< std::vector< std::vector<double> > >& W, std::vector< std::vector<double> >& V, int num_assets){
 
 double H; //payoff function
 double C; //continuation value
@@ -30,6 +30,7 @@ std::vector< double > tempvec;
 
 
 //Estimator loop
+
 for(int i=0; i<m; i++){
 tempvec.clear();
 
@@ -43,23 +44,28 @@ tempvec.clear();
 //continue to develope continuation vale			
 			sum=0;
 			for(int k=0; k<b; k++){
-			sum+=W[(m-i)][k][j]*V[i-1][k]; //m-i when i=1 is 10-1=9.when i=9 m-i=1. we get V_0 separately by using W[0][k][j]	
+			sum+=(W[(m-i)][k][j])*V[i-1][k]; //m-i when i=1 is 10-1=9.when i=9 m-i=1. we get V_0 separately by using W[0][k][j]	
+		
 			}
 
 			C=(1/((double)b))*sum;
 			H=payoff(X[(m-1)-i][j], strike)*exp(-r*delta_t*(m-i));
-		
+			//H=0;
 			if(H>=C){
 			tempvec.push_back(H);
+			//std::cout<<"H>=C and X="<<X[(m-1)-i][j]<<std::endl;
 			}
 
 			else{
 			tempvec.push_back(C);
+			//std::cout<<"C>H and X="<<X[(m-1)-i][j]<<std::endl;
 			}	
 		}
 	}
 V.push_back(tempvec);
 }
+
+
 
 sum=0;
 for(int k=0; k<b; k++){
