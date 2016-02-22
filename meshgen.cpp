@@ -262,7 +262,7 @@ std::cout<<"v_0="<<v_0<<"\t"<<"v error="<<verror<<std::endl;
 
 std::ofstream outFile("/Users/tomgeary/Desktop/miniproj/Code/results.txt");
 
-outFile << N <<"\t"<< b <<"\t"<< Path_estimator_iterations<<"\t"<< V_0 <<"\t"<< v_0 <<"\t"<< Verror+V_0 <<"\t"<< verror+v_0 << std::endl;
+outFile << N <<"\t"<< b <<"\t"<< Path_estimator_iterations<<"\t"<< V_0 <<"\t"<< v_0 <<"\t"<< Verror+V_0 <<"\t"<< v_0-verror << std::endl;
 
 outFile.close();
 
