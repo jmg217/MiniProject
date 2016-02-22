@@ -79,8 +79,8 @@ double X0=100;
 double T = 1;
 double m = 10;
 double delta_t=T/m;
-int b=1000, Rn;
-double v_0, V_0, Z, r=0.03, delta=0, sigma=0.4, Xi, Xj, w, wdenominator, v_sum, Path_estimator_iterations=500;
+int b=500, Rn, N=20;
+double v_0, V_0, Z, r=0.03, delta=0, sigma=0.4, Xi, Xj, w, wdenominator, v_sum, Path_estimator_iterations=500, vtotal_sum=0, Vtotal_sum=0;
 double strike=100, sum_Z=0;
 int num_assets=1;
 
@@ -96,7 +96,15 @@ std::vector< std::vector<double> > dim2temp;
 std:: vector<double> dim1temp;
 //mesh estimator high bias 2-d matrix
 std::vector< std::vector<double> > V;
+//V values
+std::vector< double > Vvector;
+//v values
+std::vector< double > vvector;
 
+for(int iterator=0; iterator<N; iterator++){
+X.clear();
+W.clear();
+V.clear();
 //MeshGen for loop
 for(int i=0; i<m; i++){
 
@@ -209,14 +217,15 @@ check=0;
 for(int E=0; E<b; E++){
 check+=W[q][a][E];
 //std::cout<<W[1][0][E]<<std::endl;
-}
+}/*
 if(check != b){
 std::cout<<"the sum of the weights does not add up. Ignore if check="<<check<<"=b="<<b<<std::endl;
-}
+}*/
 }
 }
 V_0=MeshEstimator(strike, r, delta_t, b, m, X, W, V, num_assets);
-
+Vvector.push_back(V_0);
+Vtotal_sum+=V_0;
 
 std::cout<<"V_0="<<V_0<<std::endl;
 
@@ -226,9 +235,36 @@ v_sum+=PathEstimator(strike, r, delta_t, b,  m, sigma, delta, X0, X, W, V, num_a
 }
 
 v_0=(1/double(Path_estimator_iterations))*v_sum;
+vvector.push_back(v_0);
+vtotal_sum+=v_0;
 
 std::cout<<"v_0="<<v_0<<std::endl;
+}//this is the end of the loop over the whole process.
 
+
+V_0=(1/double(N))*Vtotal_sum;
+v_0=(1/double(N))*vtotal_sum;
+
+double std_div_V=0, std_div_v=0, squaresumV=0, squaresumv=0, Verror=0, verror=0;
+
+for(int h=0; h<N; h++){
+squaresumV+=(Vvector[h]-V_0)*(Vvector[h]-V_0);
+squaresumv+=(vvector[h]-v_0)*(vvector[h]-v_0);
+}
+std_div_V=sqrt((1/double(N))*squaresumV);
+std_div_v=sqrt((1/double(N))*squaresumv);
+
+Verror=1.96*std_div_V*(1/sqrt(double(N)));
+verror=1.96*std_div_v*(1/sqrt(double(N)));
+std::cout<<"V_0="<<V_0<<"\t"<<"V error="<<Verror<<std::endl;
+std::cout<<"v_0="<<v_0<<"\t"<<"v error="<<verror<<std::endl;
+
+
+std::ofstream outFile("/Users/tomgeary/Desktop/miniproj/Code/results.txt");
+
+outFile << N <<"\t"<< b <<"\t"<< Path_estimator_iterations<<"\t"<< V_0 <<"\t"<< v_0 <<"\t"<< Verror+V_0 <<"\t"<< verror+v_0 << std::endl;
+
+outFile.close();
 
 print_high_payoff( b, m, X, V);
 
