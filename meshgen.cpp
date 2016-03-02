@@ -75,15 +75,58 @@ int main(){
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 */
 srand((unsigned)time(NULL));
+/*
 double X0=100;
 double T = 1;
 double m = 10;
 double delta_t=T/m;
-int b=500, Rn, N=20;
-double v_0, V_0, Z, r=0.03, delta=0, sigma=0.4, Xi, Xj, w, wdenominator, v_sum, Path_estimator_iterations=500, vtotal_sum=0, Vtotal_sum=0;
+int b=50, Rn, N=20;
+double v_0, V_0, Z, r=0.03, delta=0, sigma=0.4, Xi, Xj, w, wdenominator, v_sum, Path_estimator_iterations=50, vtotal_sum=0, Vtotal_sum=0;
 double strike=100, sum_Z=0;
 int num_assets=1;
+*/
 
+std::ifstream setting( "settings.txt" );
+std::string line;
+std::vector<std::string> settings;
+int linenumber=0;
+while(std::getline( setting, line))
+{
+if(linenumber%2==1)
+settings.push_back(line);
+linenumber++;
+}
+setting.close();
+double double_num;
+int integer;
+double X0=atof(settings[0].c_str());
+double T = atof(settings[1].c_str());
+double m = atof(settings[2].c_str());
+double delta_t=T/m;
+int Rn;
+double v_0, V_0, Z, Xi, Xj, w, wdenominator, v_sum, sum_Z=0, vtotal_sum=0, Vtotal_sum=0;
+double r= atof(settings[3].c_str());
+double delta=atof(settings[4].c_str());
+double sigma=atof(settings[5].c_str());
+double Path_estimator_iterations=atof(settings[6].c_str());
+double strike=atof(settings[7].c_str());
+int num_assets=atoi(settings[8].c_str());
+int b=atoi(settings[9].c_str());
+int N=atoi(settings[10].c_str());
+
+/*
+std::cout<<"X0="<<X0<<std::endl;
+std::cout<<"T="<<T<<std::endl;
+std::cout<<"m="<<m<<std::endl;
+std::cout<<"r="<<r<<std::endl;
+std::cout<<"delta="<<delta<<std::endl;
+std::cout<<"sigma="<<sigma<<std::endl;
+std::cout<<"path number="<<Path_estimator_iterations<<std::endl;
+std::cout<<"strike="<<strike<<std::endl;
+std::cout<<"num assets="<<num_assets<<std::endl;
+std::cout<<"b="<<b<<std::endl;
+std::cout<<"N="<<N<<std::endl;
+*/
 //MESH
 std::vector< std::vector<double> > X;
 //WEIGHTS for step 1 and beyond
@@ -260,7 +303,7 @@ std::cout<<"V_0="<<V_0<<"\t"<<"V error="<<Verror<<std::endl;
 std::cout<<"v_0="<<v_0<<"\t"<<"v error="<<verror<<std::endl;
 
 
-std::ofstream outFile("/Users/tomgeary/Desktop/miniproj/Code/results.txt");
+std::ofstream outFile("/Users/tomgeary/Desktop/miniproj/Code/results.txt", std::ios_base::app | std::ios_base::out);
 
 outFile << N <<"\t"<< b <<"\t"<< Path_estimator_iterations<<"\t"<< V_0 <<"\t"<< v_0 <<"\t"<< Verror+V_0 <<"\t"<< v_0-verror << std::endl;
 
